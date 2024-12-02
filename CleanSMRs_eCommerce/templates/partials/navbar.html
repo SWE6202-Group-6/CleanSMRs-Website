@@ -1,0 +1,64 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">CleanSMRs</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav mx-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Products</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Data</a>
+        </li>
+      </ul>
+      <!-- This section is just an example - we will need to wire this up to the user's auth state later. -->
+      <ul class="navbar-nav">
+        <!-- Dropdown for desktop view -->
+        <li class="nav-item dropdown d-none d-lg-block">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            id="navbarDropdown"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            John Smith
+          </a>
+          <ul
+            class="dropdown-menu dropdown-menu-end"
+            aria-labelledby="navbarDropdown"
+          >
+            <li><a class="dropdown-item" href="#">My Account</a></li>
+            <li><a class="dropdown-item" href="#">My Data</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" href="#">Log Out</a></li>
+          </ul>
+        </li>
+        <!-- Dropdown items in the main list for mobile view -->
+        <li class="nav-item d-lg-none">
+          <a class="nav-link" href="#">My Account</a>
+        </li>
+        <li class="nav-item d-lg-none">
+          <a class="nav-link" href="#">My Data</a>
+        </li>
+        <li class="nav-item d-lg-none">
+          <a class="nav-link" href="#">Log Out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
