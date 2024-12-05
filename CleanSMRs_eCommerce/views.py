@@ -33,6 +33,9 @@ def register(request):
         HttpResponse: A HTTP response rendering the registration template.
     """
 
+    if request.user.is_authenticated:
+        return redirect("index")
+
     if request.method == "POST":
         form = RegistrationForm(request.POST)
         if form.is_valid():
@@ -53,6 +56,9 @@ def log_in(request):
     Returns:
         HttpResponse: A HTTP response rendnering the login template.
     """
+
+    if request.user.is_authenticated:
+        return redirect("index")
 
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
