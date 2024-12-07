@@ -193,7 +193,7 @@ def error_view(request, exception=None):
 
     if isinstance(exception, BadRequest):
         status_code = 400
-    if isinstance(exception, PermissionDenied):
+    elif isinstance(exception, PermissionDenied):
         status_code = 403
         error_message = "You do not have permission to access this page."
     elif isinstance(exception, ObjectDoesNotExist) or isinstance(
