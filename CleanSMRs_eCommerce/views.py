@@ -1,5 +1,6 @@
 """View function definitions for the website."""
 
+from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
@@ -49,16 +50,21 @@ def register(request):
         form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-
-            # Make sure that the user isn't activated yet
+            # Disable the user until we verify their email.
             user.is_active = False
             user.save()
 
-            domain = get_current_site(request).domain
-            protocol = "https" if request.is_secure() else "http"
-            base_url = f"{protocol}://{domain}"
+            if not settings.EMAIL_ENABLED:
+                # If email is disabled, we can't send a verification email, so
+                # we should make sure the user is activated.
+                user.is_active = True
+                user.save()
+            else:
+                domain = get_current_site(request).domain
+                protocol = "https" if request.is_secure() else "http"
+                base_url = f"{protocol}://{domain}"
 
-            send_verification_token(user, base_url)
+                send_verification_token(user, base_url)
 
             return render(
                 request,
