@@ -63,8 +63,9 @@ def register(request):
                 domain = get_current_site(request).domain
                 protocol = "https" if request.is_secure() else "http"
                 base_url = f"{protocol}://{domain}"
-
-                send_verification_token(user, base_url)
+                activation_token = ActivationToken.objects.create_token(user)
+                activation_token.save()
+                send_verification_token(user, str(activation_token), base_url)
 
             return render(
                 request,
@@ -79,7 +80,8 @@ def register(request):
     else:
         form = RegistrationForm()
 
-    return render(request, "register.html", {"form": form})
+    status_code = 400 if form.errors else 200
+    return render(request, "register.html", {"form": form}, status=status_code)
 
 
 def log_in(request):
