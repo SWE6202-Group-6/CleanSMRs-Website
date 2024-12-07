@@ -2,10 +2,8 @@
 
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
 
-from .tokens import activation_token
+from .models import ActivationToken
 
 
 def send_verification_token(user, base_url):
@@ -18,7 +16,8 @@ def send_verification_token(user, base_url):
     Returns:
         bool: True if the email was sent successfully, otherwise False.
     """
-    token = activation_token.make_token(user)
+    activation_token = ActivationToken.objects.create_token(user)
+    activation_token.save()
 
     subject = "CleanSMRs: Activate your account"
     message = render_to_string(
@@ -26,8 +25,7 @@ def send_verification_token(user, base_url):
         {
             "name": user.get_full_name(),
             "base_url": base_url,
-            "user_id": urlsafe_base64_encode(force_bytes(user.pk)),
-            "token": token,
+            "token": str(activation_token),
         },
     )
     email = EmailMessage(subject, message, to=[user.email])

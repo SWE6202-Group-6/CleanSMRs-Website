@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-start vh-100" style="position: relative; top: 33%;">
+    <div class="border p-4 text-center shadow-sm rounded">
+        <h1 class="mb-3">Something went wrong</h1>
+        <p class="mt-4">{{ error_message }}</p>
+        Return <a href="{% url 'index' %}">home</a>.
+    </div>
+</div>
+{% endblock %}

@@ -1,16 +1,20 @@
 """View function definitions for the website."""
 
-from django.contrib.auth import get_user_model, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.exceptions import (
+    BadRequest,
+    ObjectDoesNotExist,
+    PermissionDenied,
+)
 from django.shortcuts import redirect, render
-from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
+from django.urls import Resolver404
 
 from .auth import send_verification_token
 from .forms import RegistrationForm
-from .tokens import activation_token
+from .models import ActivationToken
 
 # Create your views here.
 
@@ -56,7 +60,16 @@ def register(request):
 
             send_verification_token(user, base_url)
 
-            return redirect("index")
+            return render(
+                request,
+                "generic_message.html",
+                {
+                    "heading": "Registration Successful",
+                    "message": "Your account has been successfully created. Please check your email to activate your account.",
+                    "link": "login",
+                    "link_text": "Log in",
+                },
+            )
     else:
         form = RegistrationForm()
 
@@ -80,10 +93,6 @@ def log_in(request):
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            if not user.is_active:
-                # TODO: Add a page for unactivated users.
-                return redirect("index")
-
             login(request, user)
             return redirect("index")
     else:
@@ -107,7 +116,7 @@ def log_out(request):
     return redirect("index")
 
 
-def activate(request, encoded_id, token):
+def activate(request, token):
     """Attempts to activate a user's account using an activation token.
 
     Args:
@@ -119,29 +128,81 @@ def activate(request, encoded_id, token):
         HttpResponse: A HTTP response with a redirect.
     """
 
+    # If the user is logged in, they must have already activated their account.
     if request.user.is_authenticated:
         return redirect("index")
 
-    user_model = get_user_model()
-
+    # Check to see if the activation token exists in the database.
     try:
-        user_id = force_str(urlsafe_base64_decode(encoded_id))
-        user = user_model.objects.get(pk=user_id)
-    except (ValueError, user_model.DoesNotExist):
-        # TODO: Add a page for failed activation.
+        activation_token = ActivationToken.objects.get(pk=token)
+        user = activation_token.user
+    except (ValueError, ObjectDoesNotExist):
         user = None
 
-    if user is not None and user.is_active:
-        # The user has already activated their account, so we can just send them
-        # to the index page.
-        return redirect("index")
+    if user is None:
+        raise BadRequest("Invalid activation token.")
 
-    if user is not None and activation_token.check_token(user, token):
+    if activation_token.activated_at is not None:
+        # The token has already been activated.
+        raise BadRequest("Invalid activation token.")
+
+    if activation_token.check_token(token):
         # Activate the user.
         user.is_active = True
         user.save()
 
-        return redirect("index")
+        # Mark the token as activated.
+        activation_token.set_activated()
+        activation_token.save()
 
-    # TODO: Add a page for failed activation.
-    return redirect("index")
+        return render(
+            request,
+            "generic_message.html",
+            {
+                "heading": "Activation Successful",
+                "message": "Your account has been successfully activated. You can now log in.",
+                "link": "login",
+                "link_text": "Log in",
+            },
+        )
+
+    # Some other error occurred.
+    raise BadRequest("Invalid activation token.")
+
+
+def error_view(request, exception=None):
+    """Renders a custom error page when an appropriate exception is thrown.
+
+    Args:
+        request (Request): The request object.
+        exception (Exception): An exception.
+
+    Returns:
+        HttpResponse: An HTTP response that renders an error.
+    """
+    error_message = None
+
+    if isinstance(exception, BadRequest):
+        status_code = 400
+    if isinstance(exception, PermissionDenied):
+        status_code = 403
+        error_message = "You do not have permission to access this page."
+    elif isinstance(exception, ObjectDoesNotExist) or isinstance(
+        exception, Resolver404
+    ):
+        status_code = 404
+        error_message = "The requested resource could not be found."
+    else:
+        status_code = 500
+        error_message = "An error occurred while processing your request."
+
+    return render(
+        request,
+        "error.html",
+        {
+            "error_message": (
+                error_message if error_message is not None else str(exception)
+            )
+        },
+        status=status_code,
+    )
