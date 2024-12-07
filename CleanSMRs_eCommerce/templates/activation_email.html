@@ -1,0 +1,14 @@
+{% autoescape off %}
+
+Hello {{ name }},
+
+Thank you for signing up with CleanSMRs!
+
+To complete your account registration, please click the verification link below:
+
+{{ base_url }}{% url 'activate' encoded_id=user_id token=token %}
+
+Thanks,
+The CleanSMRs Team
+
+{% endautoescape %}
