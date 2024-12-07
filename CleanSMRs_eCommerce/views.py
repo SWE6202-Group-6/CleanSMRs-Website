@@ -54,7 +54,7 @@ def register(request):
             user.is_active = False
             user.save()
 
-            if not settings.EMAIL_ENABLED:
+            if settings.EMAIL_ENABLED is False:
                 # If email is disabled, we can't send a verification email, so
                 # we should make sure the user is activated.
                 user.is_active = True
@@ -106,7 +106,8 @@ def log_in(request):
     else:
         form = AuthenticationForm()
 
-    return render(request, "login.html", {"form": form})
+    status_code = 400 if form.errors else 200
+    return render(request, "login.html", {"form": form}, status=status_code)
 
 
 @login_required

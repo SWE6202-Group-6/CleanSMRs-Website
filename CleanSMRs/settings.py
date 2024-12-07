@@ -21,7 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(DEBUG=(bool, False))
 
 # Read environment variables from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+if not os.getenv("DJANGO_SETTINGS_MODULE", "").endswith("test"):
+    environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 
 # Quick-start development settings - unsuitable for production
