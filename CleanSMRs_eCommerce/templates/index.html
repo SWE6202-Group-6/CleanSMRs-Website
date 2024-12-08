@@ -2,6 +2,32 @@
 {% block title %}CleanSMRs - Home{% endblock %}
 {% block content %}
 <div class="container my-4">
-  <h1>Welcome to CleanSMRs</h1>
+  <h1 class="text-center display-4">CleanSMRs</h1>
+  <div class="row align-items-center">
+    <div class="col-12 col-md-6 mb-3 mb-md-0">
+      <h2 class="display-5">Clean and Efficient Small Modular Reactors</h2>
+      <p class="lead">CleanSMRs are a leading developer of clean, efficient Small Modular Reactors (SMRs), powering the
+        future of data centres and AI.
+      </p>
+      <div class="text-center">
+        <a class="btn btn-primary" href="#">View Our Products</a>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 d-flex justify-content-end">
+      <img src="https://via.placeholder.com/400" class="img-fluid" alt="Hero Image" />
+    </div>
+  </div>
+  <div class="row mt-5">
+    <div class="col text-center">
+      <div class="p-4 bg-dark text-light rounded">
+        <h2 class="my-4">Join the Future of Clean Energy</h2>
+        <p class="lead">
+          Purchase a CleanSMRs SMR or sign up for access to our environmental data service and explore the future of
+          clean nuclear energy.
+        </p>
+        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Sign Up Now</a>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
