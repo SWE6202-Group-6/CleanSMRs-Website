@@ -63,3 +63,27 @@ class ActivationToken(models.Model):
 
     def __str__(self):
         return str(self.token)
+
+class Order(models.Model):
+    order_id = models.CharField(max_length=50, unique=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    product = models.CharField(max_length=255)
+    quantity = models.IntegerField()
+    total_price = models.FloatField()
+    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('completed', 'Completed')])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Order {self.order_id} - {self.user.email}"
+
+class Subscription(models.Model):
+    subscription_id = models.CharField(max_length=50, unique=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    plan = models.CharField(max_length=50, choices=[('basic', 'Basic'), ('premium', 'Premium')])
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Subscription {self.subscription_id} - {self.user.email}"
