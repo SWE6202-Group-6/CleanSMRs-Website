@@ -1,6 +1,9 @@
 """Definition of custom managers."""
 
 from django.contrib.auth.base_user import BaseUserManager
+from django.db import models
+
+from .tokens import ActivationTokenGenerator
 
 
 class CustomUserManager(BaseUserManager):
@@ -46,3 +49,20 @@ class CustomUserManager(BaseUserManager):
         fields.setdefault("is_superuser", True)
 
         return self.create_user(email, password, **fields)
+
+
+class ActivationTokenManager(models.Manager):
+    """Custom manager for ActivationToken model."""
+
+    def create_token(self, user):
+        """Creates a new instance of an ActivationToken.
+
+        Args:
+            user (CustomUser): The user to generate an activation token for.
+
+        Returns:
+            ActivationToken: The newly-created activation token.
+        """
+        token = ActivationTokenGenerator().make_token(user)
+        activation_token = self.create(token=token, user=user)
+        return activation_token

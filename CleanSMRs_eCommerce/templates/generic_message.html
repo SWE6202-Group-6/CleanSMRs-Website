@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-start vh-100" style="position: relative; top: 33%;">
+    <div class="border p-4 text-center shadow-sm rounded">
+        <h1 class="mb-3">{{ heading }}</h1>
+        <p class="mt-4">{{ message }}</p>
+        {% if link %}
+            <a href="{% url link %}" class="btn btn-primary mt-4">{{ link_text }}</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
