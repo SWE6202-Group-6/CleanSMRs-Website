@@ -1,9 +1,11 @@
 """Model definitions for the website."""
 
 from datetime import datetime, timezone
+import uuid
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.forms import ValidationError
 
 from .managers import ActivationTokenManager, CustomUserManager
 
@@ -64,26 +66,109 @@ class ActivationToken(models.Model):
     def __str__(self):
         return str(self.token)
 
-class Order(models.Model):
-    order_id = models.CharField(max_length=50, unique=True)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    product = models.CharField(max_length=255)
-    quantity = models.IntegerField()
-    total_price = models.FloatField()
-    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('completed', 'Completed')])
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+
+
+class Plan(models.Model):
+    """Model that represents a subscription plan."""
+
+    PLAN_CHOICES = [
+        (12, "1 year"),
+        (24, "2 years"),
+        (36, "3 years"),
+    ]
+
+    name = models.CharField(max_length=255, blank=True, null=False)
+    duration_months = models.IntegerField(
+        blank=True, choices=PLAN_CHOICES, null=False, verbose_name="Duration"
+    )
+
+    objects = models.Manager()
 
     def __str__(self):
-        return f"Order {self.order_id} - {self.user.email}"
+        return str(self.name)
+
+
+class Product(models.Model):
+    """Model that represents a product for sale on the website."""
+
+    PRODUCT_TYPES = [
+        ("physical_product", "Physical Product"),
+        ("data_access", "Data Access"),
+    ]
+
+    name = models.CharField(max_length=255, blank=True, null=False)
+    description = models.TextField(blank=True, null=False)
+    type = models.CharField(
+        max_length=20, choices=PRODUCT_TYPES, blank=True, null=False
+    )
+    price = models.DecimalField(
+        max_digits=12, decimal_places=2, blank=True, null=False
+    )
+    image_path = models.CharField(max_length=255, blank=True, null=True)
+    plan = models.OneToOneField(
+        Plan, on_delete=models.CASCADE, null=True, verbose_name="Plan"
+    )
+    stripe_price_id = models.CharField(
+        max_length=50, blank=True, null=False, verbose_name="Stripe Price ID"
+    )
+
+    def clean(self):
+        if self.type == "data_access" and self.plan_id is None:
+            raise ValidationError("Data access products must have a plan ID.")
+
+    def __str__(self):
+        return str(self.name)
+
+
+class Order(models.Model):
+    """Model that represents an order placed by a user."""
+
+    ORDER_STATUSES = [
+        ("pending", "Pending"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+        ("refunded", "Refunded"),
+    ]
+
+    order_number = models.CharField(max_length=40, blank=True, null=False)
+    date_placed = models.DateTimeField(auto_now_add=True, null=False)
+    status = models.CharField(
+        max_length=20, choices=ORDER_STATUSES, blank=True, null=False
+    )
+    order_total = models.DecimalField(
+        max_digits=12, decimal_places=2, blank=True, null=False
+    )
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, null=False, verbose_name="Product"
+    )
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=False)
+
+    objects = models.Manager()
+
+    def save(self, *args, **kwargs):
+        """Generates an order number using a UUID if one is not provided."""
+        if not self.order_number:
+            self.order_number = str(uuid.uuid4())
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.order_number)
+
 
 class Subscription(models.Model):
-    subscription_id = models.CharField(max_length=50, unique=True)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-    plan = models.CharField(max_length=50, choices=[('basic', 'Basic'), ('premium', 'Premium')])
-    is_active = models.BooleanField(default=True)
+    """Model that represents a subscription to a data access plan."""
 
-    def __str__(self):
-        return f"Subscription {self.subscription_id} - {self.user.email}"
+    plan = models.ForeignKey(
+        Plan, on_delete=models.CASCADE, null=False, verbose_name="Plan"
+    )
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, null=False, verbose_name="User"
+    )
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, null=False, verbose_name="Order"
+    )
+    start_date = models.DateTimeField(auto_now_add=True, null=False)
+    end_date = models.DateTimeField(null=False)
+
+    objects = models.Manager()
+
