@@ -1,13 +1,17 @@
 """Model definitions for the website."""
 
-from datetime import datetime, timezone
 import uuid
+from datetime import datetime, timezone
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.forms import ValidationError
 
-from .managers import ActivationTokenManager, CustomUserManager
+from .managers import (
+    ActivationTokenManager,
+    CustomUserManager,
+    SubscriptionManager,
+)
 
 # Create your models here.
 
@@ -65,7 +69,6 @@ class ActivationToken(models.Model):
 
     def __str__(self):
         return str(self.token)
-
 
 
 class Plan(models.Model):
@@ -170,5 +173,4 @@ class Subscription(models.Model):
     start_date = models.DateTimeField(auto_now_add=True, null=False)
     end_date = models.DateTimeField(null=False)
 
-    objects = models.Manager()
-
+    objects = SubscriptionManager()

@@ -16,7 +16,7 @@
       <h1 class="display-4">{{ product.name }}</h1>
       <p class="lead">{{ product.description }}</p>
       <p class="fw-bold">£{{ product.price }}</p>
-      <a href="#" class="btn btn-primary">Buy</a>
+      <a href="{% url 'checkout' product_id=product.id %}" class="btn btn-primary">Buy</a>
     </div>
   </div>
 {% endblock %}
