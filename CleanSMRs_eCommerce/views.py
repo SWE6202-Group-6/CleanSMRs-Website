@@ -15,7 +15,7 @@ from django.urls import Resolver404
 
 from .auth import send_verification_token
 from .forms import RegistrationForm
-from .models import ActivationToken
+from .models import ActivationToken, CustomUser, Product
 
 # Create your views here.
 
@@ -123,6 +123,35 @@ def log_out(request):
 
     logout(request)
     return redirect("index")
+
+
+def products_view(request):
+    """Renders the products view with all products retrieved from the database.
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        HttpResponse: An HTTP response rendering the products template.
+    """
+
+    products = Product.objects.all()
+    return render(request, "products.html", {"products": products})
+
+
+def product_view(request, product_id):
+    """Renders a single product.
+
+    Args:
+        request (Request): The request object.
+        product_id (int): The ID of the product to view.
+
+    Returns:
+        HttpResponse: An HTTP response rendering the products template.
+    """
+
+    product = Product.objects.get(pk=product_id)
+    return render(request, "product.html", {"product": product})
 
 
 def activate(request, token):
