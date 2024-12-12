@@ -15,7 +15,7 @@ from django.urls import Resolver404
 
 from .auth import send_verification_token
 from .forms import RegistrationForm
-from .models import ActivationToken
+from .models import ActivationToken, CustomUser, Subscription, Order
 
 # Create your views here.
 
@@ -215,3 +215,18 @@ def error_view(request, exception=None):
         },
         status=status_code,
     )
+
+
+
+@login_required
+def account_view(request):
+    user_details = CustomUser.objects.get(id=request.user.id)
+    subscription = Subscription.objects.filter(user=request.user).order_by('-end_date').first()
+    orders = Order.objects.filter(user=request.user).order_by('-date_placed')
+    
+    context = {
+        'user_details': user_details,
+        'subscription': subscription,
+        'orders': orders,
+    }
+    return render(request, 'account.html', context)

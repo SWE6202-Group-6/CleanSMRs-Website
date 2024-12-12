@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}CleanSMRs - My Account{% endblock %}
+{% block content %}
+  <h1 class="text-center">Account Details</h1>
+  <div class="container mt-4">
+    <div class="row">
+      <!-- user details -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">My Details</h5>
+            <p>Forename: {{ user_details.first_name }}</p>
+            <p>Surname: {{ user_details.last_name }}</p>
+            <p>Email Address: {{ user_details.email }}</p>
+            <p>Address: {{ user_details.address }}, {{ user_details.city }}, {{ user_details.country }}, {{ user_details.postal_code }}</p>
+            <a href="#" class="btn btn-primary">Edit</a>
+          </div>
+        </div>
+      </div>
+      <!-- subscription details -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">My Subscription</h5>
+            {% if subscription %}
+            <p>Data Package: {{ subscription.plan.name }}</p>
+            <p>Start Date: {{ subscription.start_date|date:"d M Y" }}</p>
+            <p>End Date: {{ subscription.end_date|date:"d M Y" }}</p>
+            <p>Subscription No.: {{ subscription.order.order_number }}</p>
+          {% else %}
+            <p>No active subscription.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- order history -->
+    <div class="mt-4">
+      <h5>Order History</h5>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Order No.</th>
+            <th>Product</th>
+            <th>Date Purchased</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+            <tr>
+                <td>{{ order.order_number }}</td>
+                <td>{{ order.product.name }}</td>
+                <td>{{ order.date_placed|date:"Y-m-d" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="3" class="text-center">No orders found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
