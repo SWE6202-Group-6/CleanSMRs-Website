@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}CleanSMRs - {{ product.name }}{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <a href="{% url 'products' %}">Back to Products</a>
+  <div class="row">
+    <div class="col-12 col-md-6">
+      <img
+        src="{% if product.image_path %}{% static product.image_path %}{% else %}https://placehold.co/400{% endif %}"
+        class="img-fluid"
+        alt="{{ product.name }}"
+      />
+    </div>
+    <div class="col-12 col-md-6">
+      <h1 class="display-4">{{ product.name }}</h1>
+      <p class="lead">{{ product.description }}</p>
+      <p class="fw-bold">£{{ product.price }}</p>
+      <a href="{% url 'checkout' product_id=product.id %}" class="btn btn-primary">Buy</a>
+    </div>
+  </div>
+{% endblock %}

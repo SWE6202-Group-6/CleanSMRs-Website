@@ -1,5 +1,6 @@
 """View function definitions for the website."""
 
+import stripe
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -10,12 +11,18 @@ from django.core.exceptions import (
     ObjectDoesNotExist,
     PermissionDenied,
 )
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import Resolver404
+from django.views.decorators.csrf import csrf_exempt
 
 from .auth import send_verification_token
 from .forms import RegistrationForm
-from .models import ActivationToken
+from .models import ActivationToken, CustomUser, Product
+from .payments import process_order
+
+# Set the Stripe API key.
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Create your views here.
 
@@ -123,6 +130,160 @@ def log_out(request):
 
     logout(request)
     return redirect("index")
+
+
+def products_view(request):
+    """Renders the products view with all products retrieved from the database.
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        HttpResponse: An HTTP response rendering the products template.
+    """
+
+    products = Product.objects.all()
+    return render(request, "products.html", {"products": products})
+
+
+def product_view(request, product_id):
+    """Renders a single product.
+
+    Args:
+        request (Request): The request object.
+        product_id (int): The ID of the product to view.
+
+    Returns:
+        HttpResponse: An HTTP response rendering the products template.
+    """
+
+    product = Product.objects.get(pk=product_id)
+    return render(request, "product.html", {"product": product})
+
+
+@login_required
+def create_checkout_session(request, product_id):
+    """Creates a new Stripe checkout session for the given product and redirects
+    the user to the Stripe purchase page.
+
+    Args:
+        request (Request): The request object.
+        product_id (int): The ID of the product to purchase.
+
+    Returns:
+        HttpResponse: An HTTP response redirecting the user to the Stripe.
+    """
+
+    product = Product.objects.get(pk=product_id)
+    user = CustomUser.objects.get(pk=request.user.id)
+
+    # Create a Stripe checkout session.
+    checkout_session = stripe.checkout.Session.create(
+        line_items=[
+            {
+                # This identifies the product in Stripe.
+                "price": product.stripe_price_id,
+                "quantity": 1,
+            }
+        ],
+        mode="payment",
+        success_url=f"{settings.STRIPE_SUCCESS_URL}",
+        cancel_url=f"{settings.STRIPE_CANCEL_URL}",
+        # Ensure that the session has an ID that we can use to look up the order
+        metadata={
+            "product_id": product.id,
+            "user_id": user.id,
+        },
+    )
+
+    return redirect(checkout_session.url, code=303)
+
+
+@csrf_exempt
+def stripe_webhook_handler(request):
+    """Handles incoming webhook requests from Stripe for processing purchase
+    updates. This will be called by Stripe when a purchase is completed or when
+    an asynchronous payment is successful after the purchase.
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        HttpResponse: An HTTP response indicating success or failure for Stripe.
+    """
+
+    if not settings.STRIPE_ENABLED:
+        # For local testing without purchasing enabled, we can just return 200
+        # to indicate success and continue without processing.
+        return HttpResponse(status=200)
+
+    payload = request.body
+    sig_header = request.META["HTTP_STRIPE_SIGNATURE"]
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError:
+        return HttpResponse(status=400)
+
+    if (
+        event["type"] == "checkout.session.completed"
+        or event["type"] == "checkout.session.async_payment_succeeded"
+    ):
+        process_order(event["data"]["object"]["id"])
+
+    return HttpResponse(status=200)
+
+
+@login_required
+def checkout_success(request):
+    """View that renders the success page after purchasing an item.
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        HttpResponse: An HttpResponse rendering the success page.
+    """
+
+    return render(
+        request,
+        "generic_message.html",
+        {
+            "heading": "Order Complete",
+            "message": "Your order has been successfully completed.",
+            "link": "index",
+            "link_text": "Return to the homepage",
+        },
+    )
+
+
+@login_required
+def checkout_cancel(request):
+    """View that renders the cancellation page after cancelling the purchase
+    process.
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        HttpResponse: An HttpResponse rendering the cancellation page.
+    """
+
+    return render(
+        request,
+        "generic_message.html",
+        {
+            "heading": "Cancelled",
+            "message": "Ordering cancelled. You won't be charged.",
+            "link": "index",
+            "link_text": "Return to the homepage",
+        },
+    )
 
 
 def activate(request, token):

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}CleanSMRs - Products{% endblock %}
+{% block content %}
+<div class="row">
+  {% for product in products %}
+    <div class="col-12 col-md-4 mb-4">
+      <div class="card h-100 d-flex flex-column">
+        <img
+          src="{% if product.image_path %}{% static product.image_path %}{% else %}https://placehold.co/400{% endif %}" 
+          class="card-img-top" 
+          alt="{{ product.name }}"
+        />
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ product.name }}</h5>
+          <p class="card-text">{{ product.description|get_first_sentence }}</p>
+          <p class="card-text fw-bold">£{{ product.price }}</p>
+          <div class="mt-auto">
+            <a href="{% url 'product' product_id=product.id %}" class="btn btn-primary">View Product</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
