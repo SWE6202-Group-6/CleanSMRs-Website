@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import Group
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import (
     BadRequest,
@@ -60,6 +61,10 @@ def register(request):
             # Disable the user until we verify their email.
             user.is_active = False
             user.save()
+
+            # Add the user to the default group.
+            default_group = Group.objects.get(name="Site User")
+            default_group.user_set.add(user)
 
             if settings.EMAIL_ENABLED is False:
                 # If email is disabled, we can't send a verification email, so
