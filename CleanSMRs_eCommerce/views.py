@@ -17,9 +17,9 @@ from django.shortcuts import redirect, render
 from django.urls import Resolver404
 from django.views.decorators.csrf import csrf_exempt
 
-from .auth import send_verification_token
-from .forms import RegistrationForm
-from .models import ActivationToken, CustomUser, Product
+from .auth import get_or_create_otp_secret, send_verification_token
+from .forms import OTPForm, RegistrationForm
+from .models import ActivationToken, CustomUser, Product, UserOTP
 from .payments import process_order
 
 # Set the Stripe API key.
@@ -120,6 +120,90 @@ def log_in(request):
 
     status_code = 400 if form.errors else 200
     return render(request, "login.html", {"form": form}, status=status_code)
+
+
+@login_required
+def setup_2fa(request):
+    user = request.user
+
+    if hasattr(user, "otp_secret"):
+        user_otp = UserOTP.objects.get(user=user)
+        if user_otp.validated_at is not None:
+            # User has already set up 2FA correctly and entered an initial OTP,
+            # so just redirect them to index.
+            return redirect("index")
+
+    user_otp = get_or_create_otp_secret(user)
+    qr_image = user_otp.make_qr_code_image(user.email)
+
+    if request.method == "POST":
+        form = OTPForm(request.POST)
+        if form.is_valid():
+            otp = form.cleaned_data["otp"]
+            if user_otp.validate_otp(otp):
+                return render(
+                    request,
+                    "generic_message.html",
+                    {
+                        "heading": "2FA Setup Complete",
+                        "message": "Two-factor authentication has been successfully set up.",
+                        "link": "index",
+                        "link_text": "Return to the homepage",
+                    },
+                )
+            else:
+                form.add_error("otp", "Invalid OTP code.")
+    else:
+        form = OTPForm()
+
+    status_code = 400 if form.errors else 200
+
+    return render(
+        request,
+        "setup_2fa.html",
+        {
+            "secret": user_otp.secret,
+            "qr_image": qr_image,
+            "form": form,
+        },
+        status=status_code,
+    )
+
+
+@login_required
+def verify_otp(request):
+    """Verifies the OTP code entered by the user.
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        HttpResponse: An HTTP response rendering the validate_otp template.
+    """
+
+    if request.method == "POST":
+        form = OTPForm(request.POST)
+        if form.is_valid():
+            otp = form.cleaned_data["otp"]
+            user_otp = UserOTP.objects.get(user=request.user)
+
+            if user_otp.validate_otp(otp):
+                # If the OTP is valid, set a session variable to indicate that
+                # the user has been verified for this session.
+                request.session["otp_verified"] = True
+                return redirect("index")
+            else:
+                form.add_error("otp", "Invalid OTP code.")
+        else:
+            form.add_error("otp", "Invalid OTP code.")
+    else:
+        form = OTPForm()
+
+    status_code = 400 if form.errors else 200
+
+    return render(
+        request, "validate_otp.html", {"form": form}, status=status_code
+    )
 
 
 @login_required

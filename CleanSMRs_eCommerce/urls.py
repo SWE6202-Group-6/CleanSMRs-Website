@@ -10,6 +10,8 @@ urlpatterns = [
     path("login/", views.log_in, name="login"),
     path("logout/", views.log_out, name="logout"),
     path("activate/<token>", views.activate, name="activate"),
+    path("setup-2fa", views.setup_2fa, name="setup_2fa"),
+    path("verify-otp", views.verify_otp, name="verify_otp"),
     path("products/", views.products_view, name="products"),
     path("products/<int:product_id>", views.product_view, name="product"),
     path(
