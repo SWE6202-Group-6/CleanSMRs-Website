@@ -10,6 +10,37 @@ class UserAdmin(BaseUserAdmin):
     """Modifies the admin user display."""
 
     ordering = ("first_name", "last_name")
+    list_display = ("email", "first_name", "last_name", "is_staff")
+    list_display_links = ("email",)
+
+    fieldsets = (
+        ("Login information", {"fields": ("email", "password")}),
+        (
+            "Personal information",
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "address",
+                    "city",
+                    "country",
+                    "postal_code",
+                )
+            },
+        ),
+        (
+            "Permissions",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),
+    )
 
 
 class OrderAdmin(admin.ModelAdmin):

@@ -2,6 +2,7 @@
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.core.validators import RegexValidator
 
 from .models import CustomUser
 
@@ -43,3 +44,19 @@ class RegistrationForm(UserCreationForm):
         if CustomUser.objects.filter(email=email).exists():
             raise forms.ValidationError("Email is already in use")
         return email
+
+
+class OTPForm(forms.Form):
+    """Form for accepting an OTP code."""
+
+    otp = forms.CharField(
+        max_length=6,
+        min_length=6,
+        validators=[
+            RegexValidator(r"^\d{6}$", "Only numeric input is allowed.")
+        ],
+        widget=forms.TextInput(
+            attrs={"placeholder": "OTP Code", "autofocus": True}
+        ),
+        label="",
+    )

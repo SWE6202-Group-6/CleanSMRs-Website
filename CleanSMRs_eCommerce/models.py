@@ -1,8 +1,12 @@
 """Model definitions for the website."""
 
 import uuid
+from base64 import b64encode
 from datetime import datetime, timezone
+from io import BytesIO
 
+import pyotp
+import qrcode
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.forms import ValidationError
@@ -38,7 +42,7 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email
+        return f"{self.first_name} {self.last_name} ({self.email})"
 
 
 class ActivationToken(models.Model):
@@ -69,6 +73,78 @@ class ActivationToken(models.Model):
 
     def __str__(self):
         return str(self.token)
+
+
+class UserOTP(models.Model):
+    """Model representing a user's OTP secret for two-factor authentication."""
+
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, related_name="otp_secret"
+    )
+    secret = models.CharField(max_length=255, blank=True, null=False)
+    created_at = models.DateTimeField(auto_now_add=True, null=False)
+    validated_at = models.DateTimeField(null=True)
+
+    objects = models.Manager()
+
+    def make_qr_code_image(self, email):
+        """Generate a QR code image for the user's OTP secret.
+
+        This method generates a QR code using the user's OTP secret and embeds
+        their email as the name in the provisioning URI. The QR code image is
+        converted to Base64 for display on the page.
+
+        Args:
+            email (str): The user's email address.
+
+        Returns:
+            str: A Base64-encoded image string for display on the page.
+        """
+
+        # Generate a TOTP using the user's OTP secret.
+        totp = pyotp.TOTP(self.secret)
+
+        # Create the provisioning URI, setting the name as the user's email
+        uri = totp.provisioning_uri(email, issuer_name="CleanSMRs")
+
+        # Create the QR code
+        qr_code = qrcode.make(uri)
+
+        # Buffer to store the image data
+        buffer = BytesIO()
+
+        # Save the QR code image to the buffer
+        qr_code.save(buffer)
+
+        # Reset the buffer position
+        buffer.seek(0)
+
+        # Encode the image data as a Base64 string
+        encoded_image = b64encode(buffer.read()).decode()
+
+        # Construct the Base64 image string for display on the page
+        base64_image = f"data:image/png;base64,{encoded_image}"
+
+        return base64_image
+
+    def validate_otp(self, otp):
+        """Validates the provided OTP against the user's secret.
+
+        Args:
+            otp (str): A six-digit OTP code to validate.
+
+        Returns:
+            bool: Whether the OTP is valid.
+        """
+
+        totp = pyotp.TOTP(self.secret)
+        valid = totp.verify(otp)
+
+        if valid and not self.validated_at:
+            self.validated_at = datetime.now(timezone.utc)
+            self.save()
+
+        return valid
 
 
 class Plan(models.Model):
