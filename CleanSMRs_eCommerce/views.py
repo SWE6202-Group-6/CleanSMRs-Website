@@ -1,5 +1,7 @@
 """View function definitions for the website."""
 
+from datetime import datetime, timezone
+
 import stripe
 from django.conf import settings
 from django.contrib.auth import login, logout
@@ -17,9 +19,10 @@ from django.shortcuts import redirect, render
 from django.urls import Resolver404
 from django.views.decorators.csrf import csrf_exempt
 
+from .api import get_auth_token
 from .auth import get_or_create_otp_secret, send_verification_token
 from .forms import OTPForm, RegistrationForm
-from .models import ActivationToken, CustomUser, Product, UserOTP
+from .models import ActivationToken, CustomUser, Product, Subscription, UserOTP
 from .payments import process_order
 
 # Set the Stripe API key.
@@ -373,6 +376,52 @@ def checkout_cancel(request):
             "link_text": "Return to the homepage",
         },
     )
+
+
+@login_required
+def my_data_view(request):
+    """Renders the My Data page for the user, where they can request a token
+    to access the CleanSMRs API.
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        HttpResponse: An HTTP response rendering the my_data template.
+    """
+
+    # Check if the user has an active subscription - one with an end date
+    # greater than the current date and time.
+    subscription = Subscription.objects.filter(
+        user=request.user, end_date__gt=datetime.now(timezone.utc)
+    ).first()
+
+    if subscription is None:
+        return render(
+            request,
+            "generic_message.html",
+            {
+                "heading": "No Active Subscription",
+                "message": "You don't have an active subscription. Please purchase one for data access.",
+                "link": "products",
+                "link_text": "View our Products",
+            },
+        )
+
+    data = {"subscription_expiry": subscription.end_date}
+
+    if request.method == "POST":
+        # Authenticate with the API to get a JWT.
+        jwt = get_auth_token(
+            settings.API_URL, settings.API_USER, settings.API_PASSWORD
+        )
+
+        data["token"] = jwt["token"]
+
+        expiry_date = datetime.fromisoformat(jwt["expires_at"])
+        data["token_expiry"] = expiry_date
+
+    return render(request, "my_data.html", data)
 
 
 def activate(request, token):

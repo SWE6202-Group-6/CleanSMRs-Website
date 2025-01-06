@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}CleanSMRs - My Data{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="text-center">API Access Token</h2>
+        <div class="border p-3">
+            <p class="text-center"><strong>Subscription Expires:</strong> {{ subscription_expiry|date:"Y-m-d H:i:s" }}</p>
+            {% if token %}
+            <div class="input-group mb-3">
+                <textarea class="form-control" id="apiToken" readonly rows="3" style="white-space: pre-wrap;">{{ token }}</textarea>
+            </div>
+            <p class="form-text text-center"><strong>Token expires at:</strong> {{ token_expiry|date:"Y-m-d H:i:s" }}</p>
+            {% else %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="text-center">
+                    <button class="btn btn-primary mt-2" type="submit">Request Token</button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+</div>
+{% endblock %}

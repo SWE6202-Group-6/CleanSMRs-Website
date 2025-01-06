@@ -24,4 +24,5 @@ urlpatterns = [
     path(
         "stripe_webhook/", views.stripe_webhook_handler, name="stripe_webhook"
     ),
+    path("my-data/", views.my_data_view, name="my_data"),
 ]
