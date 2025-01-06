@@ -81,3 +81,15 @@ And create a superuser:
 ```
 python manage.py createsuperuser
 ```
+# Stripe
+
+To use the Stripe integration locally, you will need the [Stripe CLI](https://docs.stripe.com/stripe-cli) installed and
+set up. You'll also need a Sandbox setup.
+
+To run the webhook listener locally, execute the following to get your webhook secret:
+
+```
+stripe listen --api-key <your-sandbox-secret> --forward-to http://127.0.0.1:8000/stripe_webhook/
+```
+
+This is required for successful purchases when developing locally.
