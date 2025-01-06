@@ -43,3 +43,35 @@ class RegistrationForm(UserCreationForm):
         if CustomUser.objects.filter(email=email).exists():
             raise forms.ValidationError("Email is already in use")
         return email
+
+
+class EditForm(forms.ModelForm):
+    """Registration form for creating a new user."""
+    class Meta:
+        """Meta class for the RegistrationForm class."""
+        
+        # first_name = forms.CharField()
+        # last_name = forms.CharField()
+        # address = forms.CharField()
+        # city = forms.CharField()
+        # country = forms.CharField()
+        # postal_code = forms.CharField()
+    
+        model = CustomUser
+        fields = [
+                    "first_name",
+                    "last_name",
+                    "address",
+                    "city",
+                    "country",
+                    "postal_code",
+                ]
+
+        widgets = {
+            "first_name": forms.TextInput(attrs={"required": False}),
+            "last_name": forms.TextInput(attrs={"required": False}),
+            "address": forms.TextInput(attrs={"required": False}),
+            "city": forms.TextInput(attrs={"required": False}),
+            "country": forms.TextInput(attrs={"required": False}),
+            "postal_code": forms.TextInput(attrs={"required": False}),
+        }

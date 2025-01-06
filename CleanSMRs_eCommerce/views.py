@@ -14,7 +14,7 @@ from django.shortcuts import redirect, render
 from django.urls import Resolver404
 
 from .auth import send_verification_token
-from .forms import RegistrationForm
+from .forms import RegistrationForm, EditForm
 from .models import ActivationToken, CustomUser, Subscription, Order
 
 # Create your views here.
@@ -230,3 +230,45 @@ def account_view(request):
         'orders': orders,
     }
     return render(request, 'account.html', context)
+
+
+@login_required
+def edit_form(request):
+    """Renders the registration page and handles registration requests.
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        HttpResponse: A HTTP response rendering the registration template.
+    """
+
+    if request.method == "POST":
+
+        user = CustomUser.objects.get(pk=request.user.id)
+
+        form = EditForm(request.POST, instance = user)
+        if form.is_valid():
+            # user = CustomUser.objects.get(pk=request.user.id)
+            # if form.first_name is not None:
+            #     user.first_name = form.first_name
+            # if form.last_name is not None:
+            #     user.last_name = form.last_name
+            # if form.address is not None:
+            #     user.address = form.address
+            # if form.city is not None:
+            #     user.city = form.city
+            # if form.country is not None:
+            #     user.country = form.country
+            # if form.postal_code is not None:
+            #     user.postal_code = form.postal_code
+            form.save()
+            return redirect("account")
+    else:
+        form = EditForm(instance=request.user)
+
+    status_code = 400 if form.errors else 200
+    return render(request, "edit.html", {"form": form}, status=status_code)
+
+
+

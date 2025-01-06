@@ -13,7 +13,7 @@
             <p>Surname: {{ user_details.last_name }}</p>
             <p>Email Address: {{ user_details.email }}</p>
             <p>Address: {{ user_details.address }}, {{ user_details.city }}, {{ user_details.country }}, {{ user_details.postal_code }}</p>
-            <a href="#" class="btn btn-primary">Edit</a>
+            <a href="{% url 'edit' %}" class="btn btn-primary">Edit</a>
           </div>
         </div>
       </div>

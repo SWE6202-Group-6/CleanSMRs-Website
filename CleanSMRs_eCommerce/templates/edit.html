@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}CleanSMRs - Edit Account{% endblock %}
+{% block content %}
+{% load django_bootstrap5 %}
+<div class="col-md-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">My Details</h5>
+        <form method="POST" class="form-group">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+        <div class="text-center">
+            {% bootstrap_button button_type="submit" content="Submit" %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
