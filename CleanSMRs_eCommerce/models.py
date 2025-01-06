@@ -185,7 +185,11 @@ class Product(models.Model):
     )
     image_path = models.CharField(max_length=255, blank=True, null=True)
     plan = models.OneToOneField(
-        Plan, on_delete=models.CASCADE, null=True, verbose_name="Plan"
+        Plan,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name="Plan",
     )
     stripe_price_id = models.CharField(
         max_length=50, blank=True, null=False, verbose_name="Stripe Price ID"
