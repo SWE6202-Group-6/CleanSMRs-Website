@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 border p-4">
+            <h2 class="text-center">Setup Two Factor Authentication</h2>
+            <p class="text-center">Scan the QR code below with your authenticator app to setup two factor authentication.</p>
+            <div class="text-center">
+                <img src="{{ qr_image }}" alt="2FA setup QR Code">
+            </div>
+            <p class="text-center">Or enter the code below manually:</p>
+            <p class="text-center">{{ secret }}</p>
+            <form method="POST">
+              {% csrf_token %}
+              {% bootstrap_form form %}
+              <div class="text-center">
+                {% bootstrap_button button_type="submit" content="Submit" %}
+              </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

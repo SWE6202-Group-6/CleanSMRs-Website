@@ -18,7 +18,7 @@
           <a class="nav-link" href="{% url 'index' %}">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Products</a>
+          <a class="nav-link" href="{% url 'products' %}">Products</a>
         </li>
       </ul>
       <ul class="navbar-nav">
@@ -40,7 +40,7 @@
               aria-labelledby="navbarDropdown"
             >
               <li><a class="dropdown-item" href="{% url 'account' %}">My Account</a></li>
-              <li><a class="dropdown-item" href="#">My Data</a></li>
+              <li><a class="dropdown-item" href="{%url 'my_data' %}">My Data</a></li>
               <li><hr class="dropdown-divider" /></li>
               <li><a class="dropdown-item" href="{% url 'logout' %}">Log Out</a></li>
             </ul>

@@ -59,6 +59,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Middleware to enforce 2FA
+    "CleanSMRs_eCommerce.middleware.TwoFactorAuthenticationMiddleware",
 ]
 
 ROOT_URLCONF = "CleanSMRs.urls"
@@ -148,3 +150,21 @@ if EMAIL_ENABLED:
     EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
     EMAIL_USE_TLS = env("EMAIL_USE_TLS", bool)
     DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
+
+LOGIN_URL = "login"
+LOGOUT_REDIRECT_URL = "index"
+
+# Stripe payment gateway settings
+STRIPE_ENABLED = env("STRIPE_ENABLED", bool, default=False)
+
+if STRIPE_ENABLED:
+    STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY")
+    STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
+    DOMAIN = env("DOMAIN")
+    STRIPE_SUCCESS_URL = env("STRIPE_SUCCESS_URL")
+    STRIPE_CANCEL_URL = env("STRIPE_CANCEL_URL")
+    STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET")
+
+API_URL = env("API_URL")
+API_USER = env("API_USER")
+API_PASSWORD = env("API_PASSWORD")

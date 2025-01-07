@@ -1,5 +1,7 @@
 """Definition of custom managers."""
 
+from datetime import datetime, timedelta, timezone
+
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 
@@ -66,3 +68,27 @@ class ActivationTokenManager(models.Manager):
         token = ActivationTokenGenerator().make_token(user)
         activation_token = self.create(token=token, user=user)
         return activation_token
+
+
+class SubscriptionManager(models.Manager):
+    """Custom manager for Subscription model."""
+
+    def create_subscription(self, user, plan, order):
+        """Creates a new subscription for a user.
+
+        Args:
+            user (CustomUser): The user to create the subscription for.
+            plan (Plan): The type of plan to use for the subscription.
+            order (Order): The order associated with the subscription.
+        """
+
+        subscription = self.create(
+            user=user,
+            plan=plan,
+            order=order,
+            start_date=datetime.now(timezone.utc),
+            end_date=datetime.now(timezone.utc)
+            + timedelta(weeks=(plan.duration_months / 12) * 52),
+        )
+
+        return subscription
