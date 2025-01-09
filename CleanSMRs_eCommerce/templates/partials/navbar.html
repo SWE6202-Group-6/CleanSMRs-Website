@@ -56,10 +56,10 @@
         <!-- Dropdown items in the main list for mobile view -->
         {% if user.is_authenticated %}
           <li class="nav-item d-lg-none">
-            <a class="nav-link" href="#">My Account</a>
+            <a class="nav-link" href="{% url 'account' %}">My Account</a>
           </li>
           <li class="nav-item d-lg-none">
-            <a class="nav-link" href="#">My Data</a>
+            <a class="nav-link" href="{%url 'my_data' %}">My Data</a>
           </li>
           <li class="nav-item d-lg-none">
             <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
